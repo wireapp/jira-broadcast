@@ -4,41 +4,37 @@ const env = Deno.env.toObject();
 
 const port = parseInt(env.PORT || '8000');
 const romanBroadcast = env.ROMAN_BROADCAST || 'https://roman.integrations.zinfra.io/broadcast';
-const romanBearerToken = env.ROMAN_TOKEN || 'some-token';
+const romanAppKey = env.ROMAN_APP_KEY;
 const jiraBaseUrl = env.JIRA_BASE_URL || 'https://wearezeta.atlassian.net/browse';
 
 const app = new Application();
-
 const router = new Router();
 
 router.post('/jira', async ({ response, request }) => {
   const body = await request.body({ type: 'json' }).value;
   const message = formatBodyToWireMessage(body);
-
   response.status = await broadcastTextToWire(message);
 });
 
-const formatBodyToWireMessage = (body: any) => {
-  const { user, issue } = body;
-  const usersName = user.displayName;
-
+const formatBodyToWireMessage = ({ user, issue }: { user: { displayName: string }, issue: { key: string, fields: any } }) => {
   const { key, fields } = issue;
   const issueUrl = `${jiraBaseUrl}/${key}`;
-  // todo maybe other stuff is interesting as well
-  const { summary } = fields;
-  return `Issue: (${key})[${issueUrl}]\n__${summary}__ by __${usersName}__`;
+  return `Issue: [${key}](${issueUrl})\n__${fields.summary}__ by __${user.displayName}__`;
 };
 
 const broadcastTextToWire = async (message: string) => {
-  const body = { type: 'text', text: { data: message } };
+  const body = { type: 'text', text: { data: message, mentions: [] } };
   const response = await fetch(
     romanBroadcast,
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${romanBearerToken}` },
+      headers: { 'app-key': romanAppKey, 'content-type': 'application/json' },
       body: JSON.stringify(body)
     }
   );
+  if (response.status != 200) {
+    console.log(await response.json());
+  }
   return response.status;
 };
 
@@ -51,7 +47,7 @@ router.get('/version', ({ response }) => {
   response.body = { version: 'hello world' };
 });
 // respond 200 to Roman when joining the conversations
-router.get('/roman', ({ response }) => {
+router.post('/roman', ({ response }) => {
   response.status = 200;
 });
 
