@@ -56,7 +56,7 @@ jobs:
       - name: Checkout k8s deployment configuration
         uses: actions/checkout@v2
         with:
-          repository: zinfra/dagobah
+          repository: zinfra/rubicon
           # TODO maybe change that to develop once we're in production
           ref: master
           path: deployment-configuration-repo
@@ -71,7 +71,7 @@ jobs:
           VERSION: ${{ env.RELEASE_VERSION }}
         run: |
           # go to directory with configuration
-          cd "deployment-configuration-repo/prod/$SERVICE"
+          cd "deployment-configuration-repo/prod/services/$SERVICE"
           # escape literals for the sed and set output with GCR
           export SED_PREPARED=$(echo $IMAGE  | awk '{ gsub("/", "\\/", $1); print "eu.gcr.io\\/"$1 }')
           # update final yaml
@@ -96,7 +96,7 @@ jobs:
       # Get the GKE credentials so we can deploy to the cluster
       - name: Obtain k8s credentials
         env:
-          GKE_CLUSTER: dagobah
+          GKE_CLUSTER: anayotto
           GKE_ZONE: europe-west1-c
         run: |
           gcloud container clusters get-credentials "$GKE_CLUSTER" --zone "$GKE_ZONE"
@@ -106,7 +106,7 @@ jobs:
         env:
           SERVICE: ${{ env.SERVICE_NAME }}
         run: |
-          kubectl apply -f "deployment-configuration-repo/prod/$SERVICE/$SERVICE.yaml"
+          kubectl apply -f "deployment-configuration-repo/prod/services/$SERVICE/$SERVICE.yaml"
 
       # Commit all data to deployment repo and open PR
       - name: Create k8s deployment configuration PR
