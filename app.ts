@@ -11,15 +11,21 @@ const app = new Application();
 const router = new Router();
 
 router.post('/jira', async ({ response, request }) => {
-  const body = await request.body({ type: 'json' }).value;
-  const message = formatBodyToWireMessage(body);
-  response.status = await broadcastTextToWire(message);
+  try {
+    const body = await request.body({ type: 'json' }).value;
+    const message = formatBodyToWireMessage(body);
+    response.status = await broadcastTextToWire(message);
+  } catch (e) {
+    console.log(e);
+    response.status = 500;
+  }
 });
 
 const formatBodyToWireMessage = ({ issue }: { issue: any }) => {
-  const { key, fields, reporter } = issue;
+  const { key, fields } = issue;
+  const { summary, reporter } = fields
   const issueUrl = `${jiraBaseUrl}/${key}`;
-  return `Issue: [${key}](${issueUrl})\n__${fields.summary}__ reported by __${reporter.displayName}__`;
+  return `Issue: [${key}](${issueUrl})\n__${summary}__ reported by __${reporter.displayName}__`;
 };
 
 const broadcastTextToWire = async (message: string) => {
