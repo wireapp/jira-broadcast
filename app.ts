@@ -16,20 +16,19 @@ router.post('/jira', async ({ response, request }) => {
   response.status = await broadcastTextToWire(message);
 });
 
-const formatBodyToWireMessage = ({ user, issue }: { user: { displayName: string }, issue: { key: string, fields: any } }) => {
-  const { key, fields } = issue;
+const formatBodyToWireMessage = ({ issue }: { issue: any }) => {
+  const { key, fields, reporter } = issue;
   const issueUrl = `${jiraBaseUrl}/${key}`;
-  return `Issue: [${key}](${issueUrl})\n__${fields.summary}__ by __${user.displayName}__`;
+  return `Issue: [${key}](${issueUrl})\n__${fields.summary}__ reported by __${reporter.displayName}__`;
 };
 
 const broadcastTextToWire = async (message: string) => {
-  const body = { type: 'text', text: { data: message, mentions: [] } };
   const response = await fetch(
     romanBroadcast,
     {
       method: 'POST',
       headers: { 'app-key': romanAppKey, 'content-type': 'application/json' },
-      body: JSON.stringify(body)
+      body: JSON.stringify({ type: 'text', text: { data: message, mentions: [] } })
     }
   );
   if (response.status != 200) {
@@ -54,8 +53,6 @@ router.post('/roman', ({ response }) => {
 app.use(router.routes());
 app.use(router.allowedMethods());
 
-app.addEventListener('listen', () => {
-  console.log(`Listening on localhost:${port}`);
-});
+app.addEventListener('listen', () => console.log(`Listening on localhost:${port}`));
 
 await app.listen({ port });
