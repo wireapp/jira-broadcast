@@ -13,7 +13,7 @@ const router = new Router();
 
 router.post('/jira/:project', async ({ params, response, request }) => {
   // we can use assert as if no project is given, server returns 404
-  const jiraProject = params.project!!;
+  const jiraProject = params.project!.trim().toLowerCase();
   const appKey = await retrieveAppKeyForProject(jiraProject);
   if (!appKey) {
     response.status = 404;
