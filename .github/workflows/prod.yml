@@ -58,7 +58,7 @@ jobs:
         with:
           repository: zinfra/rubicon
           # TODO maybe change that to develop once we're in production
-          ref: master
+          ref: develop
           path: deployment-configuration-repo
           # private repo so use different git token
           token: ${{ secrets.DEPLOYMENT_CONFIGURATION_GIT_TOKEN }}
