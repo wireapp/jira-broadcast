@@ -7,24 +7,23 @@ const romanBroadcast = env.ROMAN_BROADCAST ?? 'https://roman.integrations.zinfra
 const romanServiceAuth = env.ROMAN_SERVICE_AUTH;
 const jiraBaseUrl = env.JIRA_BASE_URL ?? 'https://wearezeta.atlassian.net/browse';
 const jiraProjectsConfigurationFilePath = env.JIRA_PROJECTS_CONFIGURATION_FILE_PATH;
-const jiraAuthToken = env.JIRA_AUTH_TOKEN ?? null; // null because if no is given, do not accept the requests by default
+const jiraAuthToken = env.JIRA_AUTH_TOKEN ?? null; // null because if no token is given, do not accept the requests by default
 
 const app = new Application();
 const router = new Router();
 
 router.post('/jira/:project', async (ctx: RouterContext) => {
-  const { response, request } = ctx;
   const { token, project } = helpers.getQuery(ctx, { mergeParams: true });
   ctx.assert(token === jiraAuthToken, 401, 'Authorization required.');
 
   const appKey = await getAppKeyForProject(project.trim().toLowerCase());
   ctx.assert(appKey, 404, `Project "${project}" does not exist.`);
 
-  const body = await request.body({ type: 'json' }).value;
+  const body = await ctx.request.body({ type: 'json' }).value;
   ctx.assert(body, 400, 'Body was not a valid JSON.');
 
-  const message = formatBodyToWireMessage(body); // this could fail if the JSON is invalid
-  response.status = await broadcastTextToWire(message, appKey);
+  const message = formatBodyToWireMessage(body);
+  ctx.response.status = await broadcastTextToWire(message, appKey);
 });
 
 const getAppKeyForProject = async (jiraProject: string) => {
@@ -56,7 +55,7 @@ const broadcastTextToWire = async (message: string, appKey: string) => {
 
 // respond 200 to Roman when joining the conversations
 router.post('/roman', ({ request, response }) => {
-  const authorized = request.headers.get('authorization')?.split(' ')?.find(x => x == romanServiceAuth);
+  const authorized = request.headers.get('authorization')?.split(' ')?.find(x => x === romanServiceAuth);
   response.status = authorized ? 200 : 401;
 });
 
@@ -78,7 +77,7 @@ router.get('/version', async ({ response }) => {
   response.body = { version: version ?? 'development' };
 });
 // log all failures that were not handled
-app.use(async (context, next) => {
+app.use(async (ctx, next) => {
   try {
     await next();
   } catch (err) {
