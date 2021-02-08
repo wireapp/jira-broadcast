@@ -85,10 +85,6 @@ router.get('/version', async ({ response }) => {
 });
 /* //--------------- WIRE Common ----------------- */
 
-router.get('/test', ({request}) => {
-  console.log(request.headers.get('test'))
-})
-
 app.use(router.routes());
 app.use(router.allowedMethods());
 
