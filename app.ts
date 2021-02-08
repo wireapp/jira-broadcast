@@ -17,7 +17,7 @@ router.post('/jira/:project', async (ctx: RouterContext) => {
   const { token, project } = helpers.getQuery(ctx, { mergeParams: true });
   ctx.assert(token === jiraAuthToken, 401, 'Authorization required.');
 
-  const appKey = await getAppKeyForProject(project);
+  const appKey = await getAppKeyForProject(project.trim().toLowerCase());
   ctx.assert(appKey, 404, `Project "${project}" does not exist.`);
 
   const body = await request.body({ type: 'json' }).value;
@@ -29,7 +29,7 @@ router.post('/jira/:project', async (ctx: RouterContext) => {
 
 const getAppKeyForProject = async (jiraProject: string) => {
   const projectsKeys = await Deno.readTextFile(jiraProjectsConfigurationFilePath).then(text => JSON.parse(text));
-  return projectsKeys[jiraProject.trim().toLowerCase()];
+  return projectsKeys[jiraProject];
 };
 
 const formatBodyToWireMessage = ({ issue }: { issue: any }) => {
@@ -55,9 +55,9 @@ const broadcastTextToWire = async (message: string, appKey: string) => {
 };
 
 // respond 200 to Roman when joining the conversations
-router.post('/roman', (ctx: RouterContext) => {
-  const authorized = ctx.request.headers.get('authorization')?.split(' ')?.find(x => x === romanServiceAuth);
-  ctx.assert(authorized, 401, 'Authorization required.');
+router.post('/roman', ({ request, response }) => {
+  const authorized = request.headers.get('authorization')?.split(' ')?.find(x => x == romanServiceAuth);
+  response.status = authorized ? 200 : 401;
 });
 
 /* ----------------- WIRE Common ----------------- */
