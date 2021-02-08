@@ -1,4 +1,4 @@
-FROM hayd/alpine-deno:1.5.2
+FROM hayd/alpine-deno:1.7.2
 
 WORKDIR /app
 
@@ -16,4 +16,4 @@ RUN echo $release_version > $RELEASE_FILE_PATH
 ENV PORT=8080
 EXPOSE $PORT
 
-CMD ["run", "--allow-net","--allow-env", "app.ts"]
+CMD ["run", "--allow-net", "--allow-env", "--allow-read", "app.ts"]
