@@ -23,18 +23,13 @@ router.post('/jira/:project', async (ctx: RouterContext) => {
   const body = await request.body({ type: 'json' }).value;
   ctx.assert(body, 400, 'Body was not a valid JSON.');
 
-  try {
-    const message = formatBodyToWireMessage(body); // this could fail if the JSON is invalid
-    response.status = await broadcastTextToWire(message, appKey);
-  } catch (e) {
-    console.log(e);
-    response.status = 400;
-  }
+  const message = formatBodyToWireMessage(body); // this could fail if the JSON is invalid
+  response.status = await broadcastTextToWire(message, appKey);
 });
 
 const getAppKeyForProject = async (jiraProject: string) => {
   const projectsKeys = await Deno.readTextFile(jiraProjectsConfigurationFilePath).then(text => JSON.parse(text));
-  return projectsKeys[jiraProject];
+  return projectsKeys[jiraProject.trim().toLowerCase()];
 };
 
 const formatBodyToWireMessage = ({ issue }: { issue: any }) => {
@@ -90,6 +85,7 @@ app.use(async (context, next) => {
     if (!isHttpError(err)) {
       console.log(err);
     }
+    throw err;
   }
 });
 /* //--------------- WIRE Common ----------------- */
