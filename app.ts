@@ -73,11 +73,11 @@ router.get('/status', ({ response }) => {
 });
 // technical endpoint to display the version
 router.get('/version', async ({ response }) => {
-  let version;
+  let version: string | undefined;
   const releaseFilePath = Deno.env.get('RELEASE_FILE_PATH');
   if (releaseFilePath) {
     try {
-      version = await Deno.readTextFile(releaseFilePath);
+      version = await Deno.readTextFile(releaseFilePath).then(text => text.trim());
     } catch {
     }
   }
