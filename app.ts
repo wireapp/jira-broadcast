@@ -44,7 +44,7 @@ const broadcastTextToWire = async (message: string, appKey: string) => {
     {
       method: 'POST',
       headers: { 'app-key': appKey, 'content-type': 'application/json' },
-      body: JSON.stringify({ type: 'text', text: { data: message, mentions: [] } })
+      body: JSON.stringify({ type: 'text', text: { data: message } })
     }
   );
   if (response.status >= 400) {
